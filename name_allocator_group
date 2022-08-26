@@ -1,0 +1,297 @@
+# -*- coding: utf-8 -*-
+"""
+Important notes:
+
+
+"""
+
+#%%
+import pandas as pd
+from openpyxl import load_workbook
+from openpyxl.styles import PatternFill
+import os
+########################### Useful functions##################################
+
+##############################################################################
+###########################  Editions from here  #############################
+
+# Indicate excel sheet 'path'!!!  Remeber the 'r'
+file = r'C:\Users\work\Desktop\test0.xlsx'
+
+# Sheet format, 0 = headers on, None = No header 
+header_ = 0   
+
+# Constrain on number of servings 
+max_serve = 4   
+
+#########################        End here        #############################
+##############################################################################
+
+# Creating a folder for excel and text files on Desktop
+desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
+newpath = desktop + '\Camp file' 
+if not os.path.exists(newpath):
+    os.makedirs(newpath)
+    
+# Save a copy to a different file
+newbook = r'%s\camp.xlsx'%(newpath)    # excel file for general classification
+serbook = r'%s\serving.xlsx'%(newpath) # excel file for serving teams
+newtxt = r'%s\stats.txt'%(newpath)     # text file for statistics
+
+########################  Preparing the dataset  #############################
+
+#---------------- This part is for general classification -------------------#
+# Read the sheet, copy the excel flie to a new folder at desktop
+# and prepare several sheets for classifications
+df0 = pd.read_excel(file, header=header_)       # Read the original data
+df0.to_excel(newbook)                           # Duplicate the orginal copy
+df = load_workbook(newbook)
+df.create_sheet('邮箱跟踪')
+df.create_sheet('给义工')
+df.create_sheet('分组')
+df.create_sheet('备注以及住宿要求')
+df.create_sheet('食物过敏')
+df.create_sheet('营费补助')
+df.save(newbook)
+
+# Reading data
+df = pd.read_excel(newbook, header=header_)  
+# Preparing sheets for writing data
+dff = load_workbook(newbook)
+ws0 = dff.worksheets[0]         #'名单'
+Email = dff.worksheets[1]       #'邮箱跟踪'
+Room = dff.worksheets[2]        #'给义工'       \\\\\\\\\\\\\
+Group = dff.worksheets[3]       #'分组'         \\\\\\\\\\\\\
+Request = dff.worksheets[4]     #'备注以及住宿要求'
+Allergy = dff.worksheets[5]     #'食物过敏'
+Scholar = dff.worksheets[6]     #'营费补助'
+#-----------------------------------------------------------------------------#
+
+#--------------------- This part is for serving teams ------------------------#
+df0.to_excel(serbook)                         # Duplicate the orginal copy
+sdf = load_workbook(serbook)
+sdf.create_sheet('小组长备选')
+sdf.create_sheet('带领敬拜')
+sdf.create_sheet('敬拜乐手')
+sdf.create_sheet('PA音响控制')
+sdf.create_sheet('后勤清理')
+sdf.create_sheet('分享见证')
+sdf.create_sheet('祷告团队')
+sdf.create_sheet('Revisit')
+sdf.save(serbook)
+
+# Reading data
+sdf = pd.read_excel(serbook, header=header_)  
+# Preparing sheets for writing data
+sdff = load_workbook(serbook)
+sws0 = sdff.worksheets[0]         #'名单'
+sGleader = sdff.worksheets[1]     #'小组长备选'
+sWorship = sdff.worksheets[2]     #'带领敬拜'
+sInstru = sdff.worksheets[3]      #'敬拜乐手'
+sPA = sdff.worksheets[4]          #'PA音响控制'        
+sClean = sdff.worksheets[5]       #'后勤清理'
+sTestm = sdff.worksheets[6]       #'分享见证'
+sPrayer = sdff.worksheets[7]      #'祷告团队'
+sRevisit = sdff.worksheets[8]     #'遗漏'
+#-----------------------------------------------------------------------------#
+
+############################### Sheet headers #################################
+
+# Preparing the headers for each sheet
+columns = df.columns              # list of columns' name from orignal data set
+num_row = len(df[columns[0]])     #
+
+size = ['XS','S','M','L','XL','2XXL']
+request = ['ID','中文姓名', '性别','备注']
+allergy = ['ID','中文姓名', '性别','食物过敏']
+scholar = ['ID','中文姓名', '性别','申请营费补助原因','申请营费补助费用']
+serve = ['小组长（需要提前抵达营会进行小组长培训）','带领敬拜','敬拜乐手（请在others标明乐器）','PA音响控制','后勤清理','分享见证','祷告团队']
+serve_sheet = [sGleader,sWorship,sInstru,sPA,sClean,sTestm,sPrayer,sRevisit]
+
+test_serve = ['小组长','带领敬拜','敬拜乐手（请在others标明乐器）','PA音响控制','后勤清理','分享见证','祷告团队']
+
+###############################################################################
+
+######################### Global variables and values #########################
+
+# Preparing counters for statistics 
+num_male = 0
+num_female = 0
+num_havebeentococm = 0
+num_cloth = [0]*6
+
+num_email = 0
+num_request = 0
+num_allergy = 0
+num_scholar = 0
+
+num_serve = [0]*len(serve_sheet)
+
+###############################################################################
+
+############################## Main code/body #################################
+#--------------- This part is for generating two excel files -----------------#
+
+# Header & styles 
+for i in range(len(columns)):
+    Email.cell(row = 1, column=i+1).value= columns[i]
+    Email.cell(row = 1, column=i+1).fill = PatternFill(start_color = '96CDCD',fill_type='solid')
+for i in range(len(request)):
+    Request.cell(row = 1, column=i+1).value= request[i]
+    Request.cell(row = 1, column=i+1).fill = PatternFill(start_color = '96CDCD',fill_type='solid')
+for i in range(len(allergy)):
+    Allergy.cell(row = 1, column=i+1).value= allergy[i]
+    Allergy.cell(row = 1, column=i+1).fill = PatternFill(start_color = '96CDCD',fill_type='solid')
+for i in range(len(scholar)):
+    Scholar.cell(row = 1, column=i+1).value= scholar[i]
+    Scholar.cell(row = 1, column=i+1).fill = PatternFill(start_color = '96CDCD',fill_type='solid')
+
+for i in range(len(serve_sheet)):
+    #print(serve_sheet[i])
+    for j in range(len(columns)):
+        serve_sheet[i].cell(row = 1, column=j+1).value= columns[j]
+        #print( serve_sheet[i].cell(row = 1, column=j+1).value)
+        serve_sheet[i].cell(row = 1, column=j+1).fill = PatternFill(start_color = '96CDCD',fill_type='solid')
+
+# Save the excel files
+dff.save(newbook)    # general classification
+sdff.save(serbook)   # sevring team
+#%%
+# Anlysing the Name data
+for i in range(num_row):
+    for j in columns:
+# This part is for general classification 
+        # Counters 
+        if j == '性别':                        # counter for males and females
+            if df[j][i] == '女':
+                num_female += 1
+            else:
+                num_male += 1
+                
+        if j == '是否曾参加过COCM的大型营会':   # counter for have been to cocm
+            if df[j][i] == '是，参加过':
+                num_havebeentococm += 1
+       
+        if j == '衣服尺寸':                    # counter for cloth sizes
+            for k in range(len(size)):
+                if df[j][i] == size[k]:
+                    num_cloth[k] += 1
+                    
+        # Producing new sheets & assosiate counters
+        if j == '未来是否愿意通过此邮箱继续收到COCM事工更新信息':
+            if df[j][i] == '是':
+                for k in range(len(columns)):
+                    Email.cell(row = num_email+2, column=k+1).value= df[columns[k]][i]
+                num_email += 1
+        
+        if j == '备注':
+            if type(df[j][i]) is str:
+                col = 0
+                for k in request :
+                    Request.cell(row = num_request+2, column=col+1).value= df[k][i]
+                    col += 1
+                num_request += 1
+                
+        if j == '食物过敏':
+            if type(df[j][i]) is str:
+                col = 0
+                for k in allergy :
+                    Allergy.cell(row = num_allergy+2, column=col+1).value= df[k][i]
+                    col += 1
+                num_allergy += 1
+        
+        if j == '是否申请营费补助':
+            if df[j][i] == '是':
+                col = 0
+                for k in scholar :
+                    Scholar.cell(row = num_scholar+2, column=col+1).value= df[k][i]
+                    col += 1
+                num_scholar += 1
+                
+# This part is for serving team
+        if j == '愿意在营会服事的岗位':
+            if type(df[j][i]) != float :           # differetiate either serving or not
+                ser_inter = df[j][i].split('\n') 
+                if len(ser_inter) >= max_serve:
+                    #print(ser_inter)
+                    for m in ser_inter:
+                        num_False = 0                  # counter for anomaly 
+                        
+                        for k in range(len(test_serve)):       
+                            #print('m=',m,'k=',test_serve[k], m == test_serve[k])
+                            if m == test_serve[k]:
+                                for n in range(len(columns)):
+                                    #print(n,df['中文姓名'][i])
+                                    #print(num_serve)
+                                    serve_sheet[k].cell(row= num_serve[k]+2, column=n+1).value = df[columns[n]][i]
+                                    serve_sheet[k].cell(row= num_serve[k]+2, column=n+1).fill = PatternFill(start_color = 'FFFF00',fill_type='solid')
+                                num_serve[k] +=1
+                            else:
+                                num_False += 1
+                                if num_False == len(test_serve):
+                                    #print(df['中文姓名'][i])
+                                    #print('Revisit',len(ser_inter),num_False)
+                                    for n in range(len(columns)):
+                                        serve_sheet[-1].cell(row= num_serve[-1]+2, column=n+1).value = df[columns[n]][i]
+                                        serve_sheet[-1].cell(row= num_serve[-1]+2, column=n+1).fill = PatternFill(start_color = 'FFFF00',fill_type='solid')
+                                    num_serve[-1] +=1
+                else:
+                    #print(ser_inter)
+                    for m in ser_inter:
+                        num_False = 0                  # counter for anomaly 
+                        
+                        for k in range(len(test_serve)):       
+                            #print('m=',m,'k=',test_serve[k], m == test_serve[k])
+                            if m == test_serve[k]:
+                                for n in range(len(columns)):
+                                    #print(n,df['中文姓名'][i])
+                                    #print(num_serve)
+                                    serve_sheet[k].cell(row= num_serve[k]+2, column=n+1).value = df[columns[n]][i]
+                                num_serve[k] +=1
+                            else:
+                                num_False += 1
+                                if num_False == len(test_serve):
+                                    #print(df['中文姓名'][i])
+                                    #print('Revisit',len(ser_inter),num_False)
+                                    for n in range(len(columns)):
+                                        serve_sheet[-1].cell(row= num_serve[-1]+2, column=n+1).value = df[columns[n]][i]
+                                    num_serve[-1] +=1
+                    
+# Save the excel files
+dff.save(newbook)    # general classification
+sdff.save(serbook)   # sevring team
+#-----------------------------------------------------------------------------#
+
+
+
+#%%
+# Statistics output in txt
+f = open(newtxt,'w',encoding = "utf-8") #encoding is for chinese character
+
+total_num = num_male + num_female
+
+f.write("总人数 : %d"%(total_num))
+f.write("\n男生人数 : %d"%(num_male))
+f.write("\n女生人数 : %d"%(num_female))
+f.write("\n经费资助 : %d"%(num_scholar))
+f.write("\n之前参加过营会的人 : %d"%(num_havebeentococm))
+f.write("\n\n\n衣服 :")
+f.write("\n%s : %d ;\n%s : %d ;\n%s : %d ;\n%s : %d ;\n%s : %d ;\n%s : %d ;"%(size[0],num_cloth[0],\
+                                    size[1],num_cloth[1],size[2],num_cloth[2],size[3],num_cloth[3],\
+                                    size[4],num_cloth[4],size[5],num_cloth[5]))
+
+f.write("\n\n\n服侍情况 ：")
+f.write("\n检查Revisit sheet, 有人可能填的东西有问题 或者 sheet title name 需要更换")
+f.write("\n检查sheet header section，核对一下服侍的heaers")
+f.write("\nSheets 中用黄色标出来的是有服侍超过%d个的\n\n\n"%(max_serve))
+f.write("服侍统计 ：")
+for i in range(len(test_serve)):
+    f.write("\n%s : %d"%(test_serve[i],num_serve[i]))
+
+f.close()
+
+      
+
+#%%
+
+
