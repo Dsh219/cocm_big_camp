@@ -230,12 +230,15 @@ for i in range(len(serve_sheet)):
         #print( serve_sheet[i].cell(row = 1, column=j+1).value)
         serve_sheet[i].cell(row = 1, column=j+1).fill = PatternFill(start_color = '96CDCD',fill_type='solid')
 
+Group.cell(row=1, column=1).value = '组名'
 Group.cell(row=1, column=2).value = '小组长1'
 Group.cell(row=1, column=3).value = '小组长2'
 Group.cell(row=1, column=2).font = Font(size=18,bold=True)
 Group.cell(row=1, column=3).font = Font(size=18,bold=True)
 Group.cell(row=1, column=2).alignment = Alignment(shrink_to_fit=True)
 Group.cell(row=1, column=3).alignment = Alignment(shrink_to_fit=True)
+Group.cell(row=1 + 1 + num_group, column=1).value = '不分组'
+Group.cell(row=1 + 1 + num_group, column=1).fill = PatternFill(start_color = '880808',fill_type='solid')
 
 # Save the excel files-----------------------------------------------------------------------------------------
 dff.save(newbook)    # general classification
