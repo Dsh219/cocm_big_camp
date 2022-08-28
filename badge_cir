@@ -1,0 +1,206 @@
+# -*- coding: utf-8 -*-
+"""
+
+Important notes:
+    
+This code will generate a html file for printing circular badges. 
+
+Before using this code, '分组' sheet in 'camp.xlsx' is needed to be revisit manualy, 
+the group alloctions need to be revisited and change if needed.
+
+The background images for badges and name are needed to be saved in 'Camp file' folder!!!
+
+Formats and parameters of the badges can be modified in parameters region, watch out the unit!!!
+     
+
+"""
+
+
+import pandas as pd
+import os
+from openpyxl import load_workbook
+
+############################# Useful funciton #################################
+
+def name_extract(cell):
+    L = cell.split(' ')
+    return L[1]
+
+###############################################################################
+
+#####################  Parameters can be modified  ############################
+ 
+# Badge background and dimensions in cm !!!!
+badge_bg = 'bg_img.png'
+badge_size = 6.68
+badge_width = 6.68
+badge_height = 6.68 
+
+# Name box background and dimensions in cm !!!!!!
+name_width = 6.68
+
+# Name box relative postion to the badge, in cm !!!!!
+name_margin_top = 3.6               # Postion of the name box
+groupname_margin_top = 0.3          # Relative postion of group name
+# Font of the name
+name_font = 'Heiti'
+group_font ='Heiti'
+
+###############################################################################
+
+############################### Main body  ####################################
+
+# Extract desktop path for storing 
+desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
+newpath = desktop + '\Camp file' 
+
+# Read the updated data
+file = r'%s\camp.xlsx' % (newpath) 
+
+# Sheet format, 0 = headers on, None = No header 
+header_ = 0 
+
+# Read the Group sheet from the 'camp' excel file 
+df = pd.read_excel(file,sheet_name='分组')         
+df0 = load_workbook(file)
+Group = df0.worksheets[3]
+
+# Html algorithm and design
+head = '''
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>test_cir</title>
+    <style>
+        * {padding:0; margin: 0;}
+
+        @page { margin: 2cm }
+        @media print  
+        {
+        div {
+            page-break-inside: avoid;
+            }
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            height: 20px;
+            background-color: transparent;
+        }
+        
+        .page {
+            background-color: transparent;
+            margin-top: 0.05cm;
+            margin-left: 0.05cm;
+            width: 21cm;
+            height: 29.5cm;
+            border-style: solid;
+            border-width: 1px;
+            border-color:transparent;
+        }
+        .badge{
+            background-image: url(%s); 
+            background-repeat: no-repeat;
+            background-size: %fcm %fcm;  /* parameter */
+            /*background-color: yellow;*/
+            width: %fcm;
+            height: %fcm;
+            border-style: solid;
+            border-color: transparent;
+            float: left;
+        }
+        .name{
+            width: %fcm;
+            margin-top: %fcm; /* parameter */
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .centre{
+            padding-top: 0.3cm;  /* parameter */
+        }
+        .centre p {
+            font-family: %s;
+            font-size: 26pt;
+            text-align: center;
+            color: white;
+        }
+        .group_name {
+            margin-top: %fcm;  /* parameter */
+        }
+        .group_name p {
+            font-family: %s;
+            font-size: 15pt;
+            text-align: center;
+            color: white;
+        }
+    </style>
+</head>
+'''% (badge_bg,badge_size,badge_size,badge_width,badge_height,name_width,\
+    name_margin_top,name_font,groupname_margin_top,group_font)
+    
+c = '''
+<div class = badge>
+            <div class = name>
+                <div class = centre>
+                    <p>%s</p>
+                </div>
+                <div class = group_name >
+                    <p>%s</p>
+                </div>
+            </div>
+        </div>
+''' 
+
+# Generate badges with different names
+Cc = str(c)
+total_valid_row = len(df['组名']) - 1
+# Print the first person
+row_start = 2
+Names = c%(name_extract(Group.cell(row=row_start,column=2).value),df['组名'][0])
+# Print the remaining members in first row
+col_start = 2 + 1
+while Group.cell(row=2,column=col_start).value is not None:
+    div = str(Cc)
+    string = div%(name_extract(Group.cell(row=row_start,column=col_start).value),df['组名'][0])
+    #print(name_extract(Group.cell(row=row_start,column=col_start).value))
+    col_start +=1
+    Names += string
+# Print the remaning groups
+for i in range(1,total_valid_row):
+    col_start = 2
+    while Group.cell(row=i+2,column=col_start).value is not None:
+        div = str(Cc)
+        string = div%(name_extract(Group.cell(row=i+2,column=col_start).value),df['组名'][i])
+        #print(df['组名'][i],name_extract(Group.cell(row=row_start,column=col_start).value))
+        col_start +=1
+        Names += string
+# Print the last row which is '不分组'     
+col_last = 2      
+while Group.cell(row=len(df['组名'])+1,column=col_last).value is not None:
+    div = str(Cc)
+    string = div%(name_extract(Group.cell(row=len(df['组名'])+1,column=col_last).value),' ')
+    #print(name_extract(Group.cell(row=row_start,column=col_start).value))
+    col_last +=1
+    Names += string
+
+body = '''
+<body>
+    <div class = page>
+        %s
+    </div>
+</body>
+</html>
+''' % (Names)
+
+
+# Create html file
+F = open(r'%s\badge_cir.html' %(newpath),"w",encoding="utf-8")
+F.write(head + body)
+              
+# Saving the data into the HTML file
+F.close()
+
+    
+    
