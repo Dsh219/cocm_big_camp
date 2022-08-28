@@ -2,14 +2,26 @@
 """
 Important notes:
 
+This code will generate a folder to store name-data excel files on Desktop, 
+the folder is named as 'Camp file', there should be two excel files and one text
+file.
+
+To use this code, need to install the following modules ---
+pandas + openpyxl + os, 
+they are easy to install, installations can be found in Google.
+
+The code takes the orgianl excel file path, which contains the raw name data, as input.
+
+Path has to be in a certain form: (remember the 'r' in the front)
+    file = r'excel path'
+    
+
 
 """
 
-#%%
 import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill, Alignment, Font
-
 import os
 import random
 ########################### Useful functions##################################
@@ -62,19 +74,25 @@ def person_trans(cell):
 ##############################################################################
 ###########################  Editions from here  #############################
 
+'''
+Headers and sheet names can be edited in 'Preparing the dataset' and 
+'Sheet headers' sections.
+'''
+
 # Indicate excel sheet 'path'!!!  Remeber the 'r'
 file = r'C:\Users\work\Desktop\test0.xlsx'
 
 # Sheet format, 0 = headers on, None = No header 
 header_ = 0   
 
-# Constrain on number of servings 
+# Constrain on number of servings (will be used to highlight the name in excel)
 max_serve = 4   
 
-# Number of groups
+# Number of groups (will be used to allocate members to groups)
 num_group = 12
 
 #########################        End here        #############################
+
 ##############################################################################
 
 # Creating a folder for excel and text files on Desktop
@@ -96,12 +114,9 @@ newtxt = r'%s\stats.txt'%(newpath)     # text file for statistics
 df0 = pd.read_excel(file, header=header_)       # Read the original data
 df0.to_excel(newbook)       # Duplicate the orginal copy
 df = load_workbook(newbook)
-df.create_sheet('邮箱跟踪')
-df.create_sheet('给义工')
-df.create_sheet('分组')
-df.create_sheet('备注以及住宿要求')
-df.create_sheet('食物过敏')
-df.create_sheet('营费补助')
+sheet_name0 = ['邮箱跟踪','给义工','分组','备注以及住宿要求','食物过敏','营费补助']
+for i in sheet_name0:                       # Making sheets for general file
+    df.create_sheet(i)
 df.save(newbook)
 
 # Reading data
@@ -120,14 +135,9 @@ Scholar = dff.worksheets[6]     #'营费补助'
 #--------------------- This part is for serving teams ------------------------#
 df0.to_excel(serbook)                         # Duplicate the orginal copy
 sdf = load_workbook(serbook)
-sdf.create_sheet('小组长备选')
-sdf.create_sheet('带领敬拜')
-sdf.create_sheet('敬拜乐手')
-sdf.create_sheet('PA音响控制')
-sdf.create_sheet('后勤清理')
-sdf.create_sheet('分享见证')
-sdf.create_sheet('祷告团队')
-sdf.create_sheet('Revisit')
+sheet_name1 = ['小组长备选','带领敬拜','敬拜乐手','PA音响控制','后勤清理','分享见证','祷告团队','Revisit']
+for i in sheet_name1:                         # Making sheets for serving file
+    sdf.create_sheet(i)
 sdf.save(serbook)
 
 # Reading data
@@ -144,6 +154,7 @@ sTestm = sdff.worksheets[6]       #'分享见证'
 sPrayer = sdff.worksheets[7]      #'祷告团队'
 sRevisit = sdff.worksheets[8]     #'遗漏'
 #-----------------------------------------------------------------------------#
+###############################################################################
 
 ############################### Sheet headers #################################
 
@@ -155,11 +166,12 @@ size = ['XS','S','M','L','XL','2XXL']
 request = ['ID','中文姓名', '性别','备注']
 allergy = ['ID','中文姓名', '性别','食物过敏']
 scholar = ['ID','中文姓名', '性别','申请营费补助原因','申请营费补助费用']
+
 serve = ['小组长（需要提前抵达营会进行小组长培训）','带领敬拜','敬拜乐手（请在others标明乐器）','PA音响控制','后勤清理','分享见证','祷告团队']
 serve_sheet = [sGleader,sWorship,sInstru,sPA,sClean,sTestm,sPrayer,sRevisit]
 
-test_serve = ['小组长','带领敬拜','敬拜乐手（请在others标明乐器）','PA音响控制','后勤清理','分享见证','祷告团队']
 
+test_serve = ['小组长','带领敬拜','敬拜乐手（请在others标明乐器）','PA音响控制','后勤清理','分享见证','祷告团队']
 
 time_believe = ['大于5年','3-5年','2年','1年','少于1年','还未信主']
 group_header = ['ID','中文姓名','性别','性格倾向']
@@ -224,10 +236,10 @@ Group.cell(row=1, column=2).font = Font(size=18,bold=True)
 Group.cell(row=1, column=3).font = Font(size=18,bold=True)
 Group.cell(row=1, column=2).alignment = Alignment(shrink_to_fit=True)
 Group.cell(row=1, column=3).alignment = Alignment(shrink_to_fit=True)
-# Save the excel files
+
+# Save the excel files-----------------------------------------------------------------------------------------
 dff.save(newbook)    # general classification
 sdff.save(serbook)   # sevring team
-
 
 #----------------------------> Anlysing the Name raw data
 for i in range(num_row):
@@ -352,17 +364,35 @@ for i in Gleader_index:
 # Store group members into different year group
 for i in Gmember_index:
     if df['信主时间'][i] == time_believe[0] :
-        yr5.append(i)
+        if df['性别'][i] == '男':
+            yr5.insert(0,i)
+        elif df['性别'][i] == '女':
+            yr5.append(i)
     elif df['信主时间'][i] == time_believe[1] :
-        yr4.append(i)
+        if df['性别'][i] == '男':
+            yr4.insert(0,i)
+        elif df['性别'][i] == '女':
+            yr4.append(i)
     elif df['信主时间'][i] == time_believe[2] :
-        yr2.append(i)
+        if df['性别'][i] == '男':
+            yr2.insert(0,i)
+        elif df['性别'][i] == '女':
+            yr2.append(i)
     elif df['信主时间'][i] == time_believe[3] :
-        yr1.append(i)
+        if df['性别'][i] == '男':
+            yr1.insert(0,i)
+        elif df['性别'][i] == '女':
+            yr1.append(i)
     elif df['信主时间'][i] == time_believe[4] :
-        yr05.append(i)
+        if df['性别'][i] == '男':
+            yr05.insert(0,i)
+        elif df['性别'][i] == '女':
+            yr05.append(i)
     elif df['信主时间'][i] == time_believe[5] :
-        yr0.append(i)
+        if df['性别'][i] == '男':
+            yr0.insert(0,i)
+        elif df['性别'][i] == '女':
+            yr0.append(i)
     else:
         cocm.append(i)
 
@@ -372,9 +402,9 @@ time_believe_group_backup = time_believe_group.copy()
 # Well mix the data 
 Gmember_index=[]
 for i in range(len(time_believe_group)):           
-    random.shuffle(time_believe_group[i])             # randomise the data
-    random.shuffle(time_believe_group[i]) 
-    random.shuffle(time_believe_group[i]) 
+   # random.shuffle(time_believe_group[i])             # randomise the data
+   # random.shuffle(time_believe_group[i]) 
+   # random.shuffle(time_believe_group[i]) 
     Gmember_index += time_believe_group[i]            # create new Gmember_index with random order
 
 # Adding the well mixed members to each group in the order of the have-believed time, from longest to shortest
@@ -387,14 +417,13 @@ while index_roll < num_group_member:
         else:
             group[i].append(Gmember_index[index_roll])
             index_roll += 1
-'''        
+       
 # test   
-a = 0
-for i in range(len(group)):
-    print(len(group[i]))
-    a += len(group[i])
-'''       
-#%%
+#a = 0
+#for i in range(len(group)):
+#    print(len(group[i]))
+#    a += len(group[i])     
+
 # Allocating the Group members
 group_row = 0
 for i in range(len(group)):
@@ -410,7 +439,6 @@ for i in range(len(group)):
         else :
             Group.cell(row= group_row+2, column= j+4).fill = PatternFill(start_color = 'ffc0cb',fill_type='solid')
     group_row += 1
-
 
 # Insert cocm members alongside
 cocm_row = 1
@@ -438,27 +466,25 @@ for i in range(len(cocm)):
         else:
             None
 
-# Save the excel files
+# Save the excel files--------------------------------------------------------------------------
 dff.save(newbook)    # general classification
 sdff.save(serbook)   # sevring team
 #-----------------------------------------------------------------------------#
 
-#%%
 # Statistics output in txt
 f = open(newtxt,'w',encoding = "utf-8") #encoding is for chinese character
 
 total_num = num_male + num_female
 
 f.write("总人数（包括cocm同工） : %d"%(total_num))
-f.write("\n男生人数 : %d"%(num_male))
-f.write("\n女生人数 : %d"%(num_female))
+f.write("\n男生人数 （包括cocm同工）: %d"%(num_male))
+f.write("\n女生人数 （包括cocm同工）: %d"%(num_female))
 f.write("\n经费资助 : %d"%(num_scholar))
 f.write("\n之前参加过营会的人 : %d"%(num_havebeentococm))
 f.write("\n\n\n衣服 :")
 f.write("\n%s : %d ;\n%s : %d ;\n%s : %d ;\n%s : %d ;\n%s : %d ;\n%s : %d ;"%(size[0],num_cloth[0],\
                                     size[1],num_cloth[1],size[2],num_cloth[2],size[3],num_cloth[3],\
                                     size[4],num_cloth[4],size[5],num_cloth[5]))
-
 f.write("\n\n\n服侍情况 ：")
 f.write("\n检查Revisit sheet, 有人可能填的东西有问题 或者 sheet title name 需要更换")
 f.write("\n检查sheet header section，核对一下服侍的heaers")
@@ -466,11 +492,5 @@ f.write("\nSheets 中用黄色标出来的是有服侍超过%d个的\n\n\n"%(max
 f.write("服侍统计 ：")
 for i in range(len(test_serve)):
     f.write("\n%s : %d"%(test_serve[i],num_serve[i]))
-
 f.close()
-
-      
-
-#%%
-
 
