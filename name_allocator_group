@@ -91,6 +91,8 @@ max_serve = 4
 # Number of groups (will be used to allocate members to groups)
 num_group = 12
 
+# Name of the camp
+camp_name = '2021YEcamp'
 #########################        End here        #############################
 
 ##############################################################################
@@ -163,6 +165,7 @@ columns = df.columns              # list of columns' name from orignal data set
 num_row = len(df[columns[0]])     # number of rows in data
 
 size = ['XS','S','M','L','XL','2XXL']
+email = ['中文姓名','英文名（或者拼音）','邮箱']
 request = ['ID','中文姓名', '性别','备注']
 allergy = ['ID','中文姓名', '性别','食物过敏']
 scholar = ['ID','中文姓名', '性别','申请营费补助原因','申请营费补助费用']
@@ -180,8 +183,13 @@ group_header = ['ID','中文姓名','性别','性格倾向']
 ######################### Global variables and values #########################
 
 # Preparing counters for statistics 
-num_male = 0
+num_male = 0                               # total male/female, including cocm staff
 num_female = 0
+
+num_male_member = [0]*4   # male/female member for each occupation status 
+num_female_member = [0]*4
+num_occ = [0]*4
+
 num_havebeentococm = 0
 num_cloth = [0]*6
 
@@ -204,15 +212,14 @@ yr0 = []
 cocm = []
 
 time_believe_group = [yr5,yr4,yr2,yr1,yr05,yr0]
+
 ###############################################################################
 
 ############################## Main code/body #################################
 #--------------- This part is for generating two excel files -----------------#
 
 # Header & styles 
-for i in range(len(columns)):
-    Email.cell(row = 1, column=i+1).value= columns[i]
-    Email.cell(row = 1, column=i+1).fill = PatternFill(start_color = '96CDCD',fill_type='solid')
+
 for i in range(len(request)):
     Request.cell(row = 1, column=i+1).value= request[i]
     Request.cell(row = 1, column=i+1).fill = PatternFill(start_color = '96CDCD',fill_type='solid')
@@ -222,6 +229,11 @@ for i in range(len(allergy)):
 for i in range(len(scholar)):
     Scholar.cell(row = 1, column=i+1).value= scholar[i]
     Scholar.cell(row = 1, column=i+1).fill = PatternFill(start_color = '96CDCD',fill_type='solid')
+for i in range(len(email)):
+    Email.cell(row = 1, column=i+2).value= email[i]
+    Email.cell(row = 1, column=i+2).fill = PatternFill(start_color = '96CDCD',fill_type='solid')
+camp_title = '营会'
+Email.cell(1,1).value = camp_title
 
 for i in range(len(serve_sheet)):
     #print(serve_sheet[i])
@@ -253,27 +265,56 @@ for i in range(num_row):
         if j == '性别':                        # counter for males and females
             if df[j][i] == '女':
                 num_female += 1
+                if df['职业状态'][i] == '学生':
+                    num_occ[0] += 1
+                    num_female_member[0] += 1
+                elif df['职业状态'][i] == '在职':
+                    num_occ[1] += 1
+                    num_female_member[1] += 1
+                elif df['职业状态'][i] == 'COCM同工':
+                    num_occ[2] += 1
+                    num_female_member[2] += 1
+                else:
+                    num_occ[3] += 1
+                    num_female_member[3] += 1
             else:
                 num_male += 1
                 
-        if j == '是否曾参加过COCM的大型营会':   # counter for have been to cocm
+                if df['职业状态'][i] == '学生':
+                    num_occ[0] += 1
+                    num_male_member[0] += 1
+                elif df['职业状态'][i] == '在职':
+                    num_occ[1] += 1
+                    num_male_member[1] += 1
+                elif df['职业状态'][i] == 'COCM同工':
+                    num_occ[2] += 1
+                    num_male_member[2] += 1
+                else:
+                    num_occ[3] += 1
+                    num_male_member[3] += 1
+
+        elif j == '是否曾参加过COCM的大型营会':   # counter for have been to cocm
             if df[j][i] == '是，参加过':
                 num_havebeentococm += 1
        
-        if j == '衣服尺寸':                    # counter for cloth sizes
+        elif j == '衣服尺寸':                    # counter for cloth sizes
             for k in range(len(size)):
                 if df[j][i] == size[k]:
                     num_cloth[k] += 1
                     
 # Re-arrange data into different sheets             
         # Producing new sheets & assosiate counters (easy ones)
-        if j == '未来是否愿意通过此邮箱继续收到COCM事工更新信息':
+        elif j == '未来是否愿意通过此邮箱继续收到COCM事工更新信息':
+            
             if df[j][i] == '是':
-                for k in range(len(columns)):
-                    Email.cell(row = num_email+2, column=k+1).value= df[columns[k]][i]
+                col = 0
+                for k in email:
+                    Email.cell(row = num_email+2, column=1).value = camp_name
+                    Email.cell(row = num_email+2, column=col+2).value= df[k][i]
+                    col += 1
                 num_email += 1
         
-        if j == '备注':
+        elif j == '备注':
             if type(df[j][i]) is str:
                 col = 0
                 for k in request :
@@ -281,7 +322,7 @@ for i in range(num_row):
                     col += 1
                 num_request += 1
                 
-        if j == '食物过敏':
+        elif j == '食物过敏':
             if type(df[j][i]) is str:
                 col = 0
                 for k in allergy :
@@ -289,7 +330,7 @@ for i in range(num_row):
                     col += 1
                 num_allergy += 1
         
-        if j == '是否申请营费补助':
+        elif j == '是否申请营费补助':
             if df[j][i] == '是':
                 col = 0
                 for k in scholar :
@@ -298,7 +339,7 @@ for i in range(num_row):
                 num_scholar += 1
                 
 #----------------------> This part is for serving team
-        if j == '愿意在营会服事的岗位':
+        elif j == '愿意在营会服事的岗位':
             if type(df[j][i]) != float :           # differetiate either serving or not
                 ser_inter = df[j][i].split('\n') 
                 
@@ -480,8 +521,10 @@ f = open(newtxt,'w',encoding = "utf-8") #encoding is for chinese character
 total_num = num_male + num_female
 
 f.write("总人数（包括cocm同工） : %d"%(total_num))
-f.write("\n男生人数 （包括cocm同工）: %d"%(num_male))
-f.write("\n女生人数 （包括cocm同工）: %d"%(num_female))
+f.write("\n男生人数 （包括cocm同工）: %d; 男学生: %d; 男在职: %d; 男中心同工: %d; 男其他: %d" %(num_male,num_male_member[0],num_male_member[1],\
+                                                                        num_male_member[2],num_male_member[3]))
+f.write("\n女生人数 （包括cocm同工）: %d; 女学生: %d; 女在职: %d; 女中心同工: %d; 女其他: %d"%(num_female,num_female_member[0],num_female_member[1],\
+                                                                        num_female_member[2],num_female_member[3]))
 f.write("\n经费资助 : %d"%(num_scholar))
 f.write("\n之前参加过营会的人 : %d"%(num_havebeentococm))
 f.write("\n\n\n衣服 :")
