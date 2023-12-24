@@ -19,7 +19,8 @@ Formats and parameters of the badges can be modified in parameters region, watch
 import pandas as pd
 import os
 from openpyxl import load_workbook
-
+import string
+upper = list(string.ascii_uppercase)  
 ############################# Useful funciton #################################
 
 def name_extract(cell):
@@ -32,19 +33,19 @@ def name_extract(cell):
  
 # Badge background and dimensions in cm !!!!
 badge_bg = 'bg_img.png'
-badge_size = 6.68
-badge_width = 6.68
-badge_height = 6.68 
+badge_size = 6.7
+badge_width = 6.7
+badge_height = 6.7 
 
 # Name box background and dimensions in cm !!!!!!
-name_width = 6.68
+name_width = 6.9
 
 # Name box relative postion to the badge, in cm !!!!!
-name_margin_top = 3.6               # Postion of the name box
-groupname_margin_top = 0.3          # Relative postion of group name
+name_margin_top = 1.45             # Postion of the name box
+groupname_margin_top = 0          # Relative postion of group name
 # Font of the name
-name_font = 'Heiti'
-group_font ='Heiti'
+name_font = "regular script"
+group_font = name_font
 
 ###############################################################################
 
@@ -61,9 +62,22 @@ file = r'%s\camp.xlsx' % (newpath)
 header_ = 0 
 
 # Read the Group sheet from the 'camp' excel file 
-df = pd.read_excel(file,sheet_name='分组')         
+df = pd.read_excel(file)         
 df0 = load_workbook(file)
-Group = df0.worksheets[3]
+Group = df0.worksheets[0]
+
+f = r'%s\2023.xlsx' % (newpath)
+Df = pd.read_excel(f) 
+Df0 = load_workbook(f)
+G = Df0.worksheets[1]
+tname = []
+
+for i in range(len(Df['中文名'])):
+    n = G.cell(row=i+2,column=2).value
+    if n:
+        tname.append(n)
+    else:
+        pass
 
 # Html algorithm and design
 head = '''
@@ -93,7 +107,7 @@ head = '''
         .page {
             background-color: transparent;
             margin-top: 0.05cm;
-            margin-left: 0.05cm;
+            margin-left: 1cm;
             width: 21cm;
             height: 29.5cm;
             border-style: solid;
@@ -114,26 +128,31 @@ head = '''
         .name{
             width: %fcm;
             margin-top: %fcm; /* parameter */
-            margin-left: auto;
-            margin-right: auto;
+            /*margin-left: auto;*/
+            /*margin-right: auto;*/
         }
         .centre{
-            padding-top: 0.3cm;  /* parameter */
+            padding-left: 1.30cm;
+            padding-top: 0.48cm;  /* parameter */
         }
         .centre p {
             font-family: %s;
-            font-size: 26pt;
-            text-align: center;
-            color: white;
+            font-size: 10.5pt;
+            text-align: left;
+            font-weight:bold;
+            letter-spacing:4px;
+            color: black;
         }
         .group_name {
             margin-top: %fcm;  /* parameter */
         }
         .group_name p {
             font-family: %s;
-            font-size: 15pt;
+            font-size: 20pt;
             text-align: center;
-            color: white;
+            font-weight:bold;
+            letter-spacing:4px;
+            color: black;
         }
     </style>
 </head>
@@ -155,35 +174,41 @@ c = '''
 
 # Generate badges with different names
 Cc = str(c)
-total_valid_row = len(df['组名']) - 1
-# Print the first person
+totalrows = len(df['组名'])
+
 row_start = 2
-Names = c%(name_extract(Group.cell(row=row_start,column=2).value),df['组名'][0])
-# Print the remaining members in first row
-col_start = 2 + 1
-while Group.cell(row=2,column=col_start).value is not None:
-    div = str(Cc)
-    string = div%(name_extract(Group.cell(row=row_start,column=col_start).value),df['组名'][0])
-    #print(name_extract(Group.cell(row=row_start,column=col_start).value))
-    col_start +=1
-    Names += string
-# Print the remaning groups
-for i in range(1,total_valid_row):
-    col_start = 2
-    while Group.cell(row=i+2,column=col_start).value is not None:
-        div = str(Cc)
-        string = div%(name_extract(Group.cell(row=i+2,column=col_start).value),df['组名'][i])
-        #print(df['组名'][i],name_extract(Group.cell(row=row_start,column=col_start).value))
-        col_start +=1
-        Names += string
-# Print the last row which is '不分组'     
-col_last = 2      
-while Group.cell(row=len(df['组名'])+1,column=col_last).value is not None:
-    div = str(Cc)
-    string = div%(name_extract(Group.cell(row=len(df['组名'])+1,column=col_last).value),' ')
-    #print(name_extract(Group.cell(row=row_start,column=col_start).value))
-    col_last +=1
-    Names += string
+Names = ''     
+num = 1 
+groupn = []
+for i in range(totalrows):
+    col = 2
+    while Group.cell(row=i+2,column=col).value is not None or Group.cell(row=i+2,column=col+1).value is not None:
+        if Group.cell(row=i+2,column=col).value is None:
+            print(f'{upper[col-1]} passed.....')
+            col += 1
+        else:
+            div=str(Cc)
+            name = Group.cell(row=i+2,column=col).value
+            name = name.replace('\n','')
+            try:
+                string = div%(df['组名'][i]+'组',name)
+            except:
+                string = div%('&nbsp',name)
+            print(i+2,upper[col-1],df['组名'][i],name,num)
+            col += 1
+            Names += string
+            num += 1 
+            groupn.append(name)
+    print('\n')
+    
+staff = []
+for tn in tname:
+    if tn in groupn:
+        pass
+    else:
+        staff.append(tn)
+        
+#
 
 body = '''
 <body>
@@ -202,5 +227,4 @@ F.write(head + body)
 # Saving the data into the HTML file
 F.close()
 
-    
     
